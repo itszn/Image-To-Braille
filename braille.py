@@ -130,7 +130,6 @@ if __name__=='__main__':
         if c[3].lower() == args.background:
             alphaColor = c[1]
             break
-    print alphaColor
 
     for u in convert(args.file,doColor=not args.nocolor, renderIRC=args.irc, cutoff=args.c, size=args.s, invert=args.invert, alphaColor=alphaColor):
         print u.encode('utf-8')
