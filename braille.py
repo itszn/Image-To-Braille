@@ -32,7 +32,7 @@ COLORS = [
 #   doColor     says if we want color escapes in our unicode
 #   renderIRC   says if we want to use IRC color escapes instead of ansi escapes
 #   invert      says if we want to invert the colors in the image
-def convert(img, doColor=True, renderIRC=True, cutoff=100, size=1.0, invert=False):
+def convert(img, doColor=True, renderIRC=True, cutoff=50, size=1.0, invert=False, alphaColor=(0,0,0)):
     i = Image.open(img)
 
     WIDTH = int(90*size)
@@ -70,14 +70,18 @@ def convert(img, doColor=True, renderIRC=True, cutoff=100, size=1.0, invert=Fals
                     # Retrieve the pixel data
                     if c+ci<i2.size[0] and r+ri<i2.size[1]:
                         p = i2.getpixel((c+ci,r+ri))
-                        if invert:
+                        alpha = p[3] if len(p)>3 else 1
+                        if invert and alpha>0:
                             p = map(lambda x: 255-x, p)
+                        elif alpha==0:
+                            p = alphaColor
                     else:
                         p = (0,0,0)
 
                     # Check the cutoff value and add to unicode value if it passes
+                    luma = (0.2126*float(p[0]) + 0.7152*float(p[1]) + 0.0722*float(p[2]))
                     pv = sum(p[:3])
-                    if pv > cutoff*3:
+                    if luma > cutoff:
                         val+=1<<i
                         cavg = map(sum,zip(cavg,p))
                         pc+=1
@@ -113,12 +117,20 @@ def convert(img, doColor=True, renderIRC=True, cutoff=100, size=1.0, invert=Fals
 if __name__=='__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('file', help='The image file to render')
-    ap.add_argument('-c',type=int,default=100, help='The color cutoff amount, from 0 to 255. Default 100')
+    ap.add_argument('-c',type=int,default=100, help='The luma cutoff amount, from 0 to 255. Default 50')
     ap.add_argument('-s', type=float, default=1.0, help='Size modifier. Default 1.0x')
     ap.add_argument('--nocolor', action="store_true", default=False, help='Don\'t use color')
     ap.add_argument('--irc', action="store_true", default=False, help='Use IRC color escapes')
     ap.add_argument('--invert', action="store_true", default=False, help='Invert the image colors')
+    ap.add_argument('--background', default='black', help='The color to display for full alpha transparency')
     args = ap.parse_args()
 
-    for u in convert(args.file,doColor=not args.nocolor, renderIRC=args.irc, cutoff=args.c, size=args.s, invert=args.invert):
+    alphaColor = (0,0,0)
+    for c in COLORS:
+        if c[3].lower() == args.background:
+            alphaColor = c[1]
+            break
+    print alphaColor
+
+    for u in convert(args.file,doColor=not args.nocolor, renderIRC=args.irc, cutoff=args.c, size=args.s, invert=args.invert, alphaColor=alphaColor):
         print u.encode('utf-8')
