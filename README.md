@@ -1,4 +1,4 @@
-# Image-To-Braille
+# Image To Braille
 Covers a given image to a unicode version using braille characters and color escapses.
 
 ## Basic Example
@@ -27,3 +27,7 @@ optional arguments:
   --background BACKGROUND
                         The color to display for full alpha transparency
 ```
+
+## Requirements
+* python2
+* [pillow](http://python-pillow.org/)
